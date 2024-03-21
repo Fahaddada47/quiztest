@@ -22,15 +22,13 @@ class QuestionAnswerController extends GetxController {
         if (responseBody != null) {
           final List<dynamic>? questionJsonList = responseBody['questions'];
           if (questionJsonList != null) {
-            // Clear the previous questions
+
             questionList.clear();
 
-            // Parse each question JSON
+
             questionList = questionJsonList
                 .map((json) => QuestionModel.fromJson(json))
                 .toList();
-
-            // Return the list of questions
             return questionList;
           } else {
             print('Questions not found in response body');

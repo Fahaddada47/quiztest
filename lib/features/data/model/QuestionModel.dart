@@ -3,7 +3,7 @@ class QuestionModel {
   final String correctAnswer;
   final Map<String, String> answers;
   final String? questionImageUrl;
-  final int score; // Assuming score is an integer value
+  final int score;
 
   QuestionModel({
     required this.question,

@@ -21,6 +21,7 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   Map<int, String?> selectedAnswers = {};
   int currentScore = 0;
   bool scoreCounted = false;
+  bool answersLocked = false;
 
   @override
   void initState() {
@@ -78,13 +79,20 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
       setState(() {
         if (currentIndex < questions!.length - 1) {
           currentIndex++;
           _timerSeconds = 10;
           _startTimer();
           scoreCounted = false;
+          answersLocked = false;
+          if (selectedAnswers[currentIndex] == null) {
+
+            selectedAnswers[currentIndex] = "";
+            scoreCounted = true;
+            currentScore -= questions![currentIndex].score;
+          }
         } else {
           allQuestionsAnswered = true;
         }
@@ -98,9 +106,16 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
     if (loadedQuestions.isNotEmpty) {
       setState(() {
         questions = loadedQuestions;
+        
+        selectedAnswers = Map<int, String?>.fromIterable(
+          loadedQuestions,
+          key: (question) => loadedQuestions.indexOf(question),
+          value: (question) => "",
+        );
       });
     }
   }
+
 
   void _onNextPressed() {
     _cancelTimer();
@@ -122,10 +137,20 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
     );
 
     Future.delayed(const Duration(seconds: 2), () {
-      Navigator.of(context).pop(); // Close the dialog
+      Navigator.of(context).pop();
+      if (selectedAnswers[currentIndex] == null) {
+
+        selectedAnswers[currentIndex] = "";
+        scoreCounted = true;
+        currentScore -= questions![currentIndex].score;
+      }
       _moveToNextQuestion();
+      if (allQuestionsAnswered) {
+        Get.back(result: currentScore);
+      }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -159,10 +184,11 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  Get.back();
+                  Get.back(result: currentScore);
                 },
                 child: const Text('Back to Home'),
               ),
+
             ],
           ),
         ),
@@ -219,17 +245,34 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
             ...question.answers.entries.map((entry) {
               final option = entry.key;
               final answer = entry.value;
+              final bool isSelected = selectedAnswer == option;
+              final bool isCorrectAnswer = question.correctAnswer == option;
+              final answerColor =
+              _getAnswerColor(question.correctAnswer, selectedAnswer);
               return RadioListTile<String>(
                 title: Text(answer),
                 value: option,
                 groupValue: selectedAnswer,
-                onChanged: (value) {
+                onChanged: answersLocked
+                    ? null
+                    : (value) {
                   setState(() {
                     selectedAnswers[currentIndex] = value;
+                    answersLocked = true;
                   });
                 },
-                activeColor: selectedAnswer == option
-                    ? _getAnswerColor(question.correctAnswer, option)
+                activeColor: Colors.red,
+                tileColor: isSelected ? answerColor : null,
+                secondary: isSelected && isCorrectAnswer
+                    ? Icon(Icons.check, color: Colors.green)
+                    : null,
+                subtitle: isSelected
+                    ? (isCorrectAnswer
+                    ? null
+                    : Text(
+                  'Correct Answer: ${question.answers[question.correctAnswer]}',
+                  style: TextStyle(color: Colors.black),
+                ))
                     : null,
               );
             }).toList(),
@@ -245,14 +288,17 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   }
 
   Color _getAnswerColor(String correctAnswer, String selectedAnswer) {
-    if (selectedAnswer == correctAnswer && !scoreCounted) {
+    if (selectedAnswer != correctAnswer) {
+      return Colors.red;
+    } else if (selectedAnswer == correctAnswer && !scoreCounted) {
       currentScore += questions![currentIndex].score;
       scoreCounted = true;
       return Colors.green;
-    } else if (selectedAnswer != correctAnswer) {
-      return Colors.red;
+    } else if (selectedAnswer == correctAnswer && scoreCounted) {
+      return Colors
+          .green;
     } else {
-      return Colors.green;
+      return Colors.black;
     }
   }
 }
