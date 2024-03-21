@@ -30,9 +30,6 @@ class QuestionAnswerController extends GetxController {
                 .map((json) => QuestionModel.fromJson(json))
                 .toList();
 
-            // Update UI
-            update();
-
             // Return the list of questions
             return questionList;
           } else {
@@ -52,5 +49,4 @@ class QuestionAnswerController extends GetxController {
       return [];
     }
   }
-
 }
