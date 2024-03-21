@@ -14,14 +14,16 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   final QuestionAnswerController questionAnswerController =
   Get.put(QuestionAnswerController());
 
-  List<QuestionModel> questions = [];
+  List<QuestionModel>? questions;
   int currentIndex = 0;
   late Timer _timer;
   int _timerSeconds = 10;
+  bool allQuestionsAnswered = false;
 
   @override
   void initState() {
     super.initState();
+    _startTimer();
     _loadQuestions();
   }
 
@@ -50,10 +52,12 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   void _moveToNextQuestion() {
     _cancelTimer();
     setState(() {
-      if (currentIndex < questions.length - 1) {
+      if (currentIndex < questions!.length - 1) {
         currentIndex++;
         _timerSeconds = 10; // Reset the timer for the next question
         _startTimer(); // Start the timer again for the next question
+      } else {
+        allQuestionsAnswered = true; // Set flag when all questions are answered
       }
     });
   }
@@ -64,18 +68,18 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
     if (loadedQuestions != null && loadedQuestions.isNotEmpty) {
       setState(() {
         questions = loadedQuestions;
-        _startTimer();
       });
     }
   }
 
   void _onNextPressed() {
+    _cancelTimer();
     _moveToNextQuestion();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (questions.isEmpty) {
+    if (questions == null) {
       return Scaffold(
         appBar: AppBar(
           title: const Text('Question/Answer Page'),
@@ -86,7 +90,33 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
       );
     }
 
-    final question = questions[currentIndex];
+    if (allQuestionsAnswered) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Time\'s Up'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Text(
+                'Time\'s Up!',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  // Navigate back to the home page
+                  Get.back();
+                },
+                child: const Text('Back to Home'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final question = questions![currentIndex];
 
     return Scaffold(
       appBar: AppBar(
@@ -106,7 +136,7 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Question ${currentIndex + 1}/${questions.length}',
+            'Question ${currentIndex + 1}/${questions!.length}',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
