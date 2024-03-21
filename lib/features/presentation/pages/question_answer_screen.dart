@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
 import 'package:quiztest/features/data/model/QuestionModel.dart';
+
 class QuestionAnswerScreen extends StatefulWidget {
   @override
   State<QuestionAnswerScreen> createState() => _QuestionAnswerScreenState();
@@ -17,7 +18,9 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   late Timer _timer;
   int _timerSeconds = 10;
   bool allQuestionsAnswered = false;
-  String? _selectedAnswer;
+  Map<int, String?> selectedAnswers = {};
+  int currentScore = 0;
+  bool scoreCounted = false;
 
   @override
   void initState() {
@@ -81,13 +84,13 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
           currentIndex++;
           _timerSeconds = 10;
           _startTimer();
+          scoreCounted = false;
         } else {
           allQuestionsAnswered = true;
         }
       });
     });
   }
-
 
   Future<void> _loadQuestions() async {
     final List<QuestionModel> loadedQuestions =
@@ -101,13 +104,9 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
 
   void _onNextPressed() {
     _cancelTimer();
-    setState(() {
-      _selectedAnswer = null;
-    });
-
     showDialog(
       context: context,
-      barrierDismissible: false, // Prevent dismissing the dialog by tapping outside
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return const AlertDialog(
           content: Column(
@@ -154,6 +153,10 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
                 'Time\'s Up!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
+              Text(
+                'Total Score: $currentScore',
+                style: TextStyle(fontSize: 20),
+              ),
               ElevatedButton(
                 onPressed: () {
                   Get.back();
@@ -167,6 +170,7 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
     }
 
     final question = questions![currentIndex];
+    final selectedAnswer = selectedAnswers[currentIndex] ?? '';
 
     return Scaffold(
       appBar: AppBar(
@@ -177,30 +181,39 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
           children: [
             const SizedBox(height: 16),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const SizedBox(width: 16),
+                Text(
+                  'Current Score: $currentScore',
+                  style: TextStyle(fontSize: 16),
+                ),
                 Text(
                   'Time left: $_timerSeconds seconds',
-                  style: const TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16),
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Text(
               'Question ${currentIndex + 1}/${questions!.length}',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ListTile(
               title: Text(
                 question.question ?? 'Question Not Available',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
               subtitle: question.questionImageUrl != null
                   ? Image.network(question.questionImageUrl!)
-                  : const SizedBox.shrink(),
+                  : SizedBox.shrink(),
               contentPadding: const EdgeInsets.all(16),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Score: ${question.score}',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
             ...question.answers.entries.map((entry) {
@@ -209,12 +222,15 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
               return RadioListTile<String>(
                 title: Text(answer),
                 value: option,
-                groupValue: _selectedAnswer,
+                groupValue: selectedAnswer,
                 onChanged: (value) {
                   setState(() {
-                    _selectedAnswer = value!;
+                    selectedAnswers[currentIndex] = value;
                   });
                 },
+                activeColor: selectedAnswer == option
+                    ? _getAnswerColor(question.correctAnswer, option)
+                    : null,
               );
             }).toList(),
             const SizedBox(height: 16),
@@ -226,5 +242,17 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
         ),
       ),
     );
+  }
+
+  Color _getAnswerColor(String correctAnswer, String selectedAnswer) {
+    if (selectedAnswer == correctAnswer && !scoreCounted) {
+      currentScore += questions![currentIndex].score;
+      scoreCounted = true;
+      return Colors.green;
+    } else if (selectedAnswer != correctAnswer) {
+      return Colors.red;
+    } else {
+      return Colors.green;
+    }
   }
 }
