@@ -1,3 +1,4 @@
+[![wakatime](https://wakatime.com/badge/github/Fahaddada47/quiztest.svg)](https://wakatime.com/badge/github/Fahaddada47/quiztest)
 # quiztest
 
 A new Flutter project.
