@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
-import 'package:get/get.dart';
-import 'package:quiztest/features/data/model/QuestionModel.dart';
+import 'dart:async';
 
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
+import 'package:quiztest/features/data/model/QuestionModel.dart';
 
 class QuestionAnswerScreen extends StatefulWidget {
   @override
@@ -13,46 +14,119 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   final QuestionAnswerController questionAnswerController =
   Get.put(QuestionAnswerController());
 
+  List<QuestionModel> questions = [];
+  int currentIndex = 0;
+  late Timer _timer;
+  int _timerSeconds = 10;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadQuestions();
+  }
+
+  @override
+  void dispose() {
+    _cancelTimer();
+    super.dispose();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      setState(() {
+        if (_timerSeconds > 0) {
+          _timerSeconds--;
+        } else {
+          _moveToNextQuestion();
+        }
+      });
+    });
+  }
+
+  void _cancelTimer() {
+    _timer.cancel();
+  }
+
+  void _moveToNextQuestion() {
+    _cancelTimer();
+    setState(() {
+      if (currentIndex < questions.length - 1) {
+        currentIndex++;
+        _timerSeconds = 10; // Reset the timer for the next question
+        _startTimer(); // Start the timer again for the next question
+      }
+    });
+  }
+
+  Future<void> _loadQuestions() async {
+    final List<QuestionModel>? loadedQuestions =
+    await questionAnswerController.fetchQuestions();
+    if (loadedQuestions != null && loadedQuestions.isNotEmpty) {
+      setState(() {
+        questions = loadedQuestions;
+        _startTimer();
+      });
+    }
+  }
+
+  void _onNextPressed() {
+    _moveToNextQuestion();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (questions.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Question/Answer Page'),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final question = questions[currentIndex];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Question/Answer Page'),
+        title: const Text('Question/Answer Page'),
       ),
-      body: FutureBuilder<List<QuestionModel>>(
-        future: questionAnswerController.fetchQuestions(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
-              child: CircularProgressIndicator(),
-            );
-          } else if (snapshot.hasError) {
-            return Center(
-              child: Text('Error: ${snapshot.error}'),
-            );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(
-              child: Text('No questions available.'),
-            );
-          } else {
-            final List<QuestionModel> questions = snapshot.data!;
-            return ListView.builder(
-              itemCount: questions.length,
-              itemBuilder: (context, index) {
-                final question = questions[index];
-                return Column(
-                  children: [
-                    // Text(questions.length.toString()), // Display number of questions
-                    ListTile(
-                      title: Text(question.question ?? ''),
-                      subtitle: Text(question.questionImageUrl ?? ''),
-                    ),
-                  ],
-                );
-              },
-            );
-          }
-        },
+      body: Column(
+        children: [
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const SizedBox(width: 16),
+              Text(
+                'Time left: $_timerSeconds seconds',
+                style: const TextStyle(fontSize: 16),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Question ${currentIndex + 1}/${questions.length}',
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          ListTile(
+            title: Text(
+              question.question ?? 'Question Not Available',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: question.questionImageUrl != null
+                ? Image.network(question.questionImageUrl!)
+                : const SizedBox.shrink(),
+            contentPadding: const EdgeInsets.all(16),
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: _onNextPressed,
+            child: const Text('Next Question'),
+          ),
+        ],
       ),
     );
   }
