@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:quiztest/features/data/repository/ques_ans_controller.dart';
+import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
 import 'package:quiztest/features/data/model/QuestionModel.dart';
 import 'package:quiztest/features/presentation/widgets/alart_dialog.dart';
 import 'package:quiztest/features/presentation/widgets/last_view.dart';
@@ -16,7 +16,8 @@ class QuestionAnswerScreen extends StatefulWidget {
 }
 
 class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
-  final questionController = Get.find<QuestionAnswerController>();
+  final QuestionAnswerController questionAnswerController =
+  Get.put(QuestionAnswerController());
 
   List<QuestionModel>? questions;
   int currentIndex = 0;
@@ -27,8 +28,6 @@ class _QuestionAnswerScreenState extends State<QuestionAnswerScreen> {
   int currentScore = 0;
   bool scoreCounted = false;
   bool answersLocked = false;
-
-  get questionAnswerController => questionController;
 
   @override
   void initState() {

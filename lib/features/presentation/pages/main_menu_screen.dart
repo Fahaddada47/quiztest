@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:quiztest/features/data/repository/ques_ans_controller.dart';
+import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
 import 'package:quiztest/features/presentation/pages/question_answer_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -53,7 +53,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('Title of the App'),
+            const Text('TEST YOUR IQ'),
             Text('Current Score: $currentScore'),
             Text('High Score: $highScore'),
             ElevatedButton(
@@ -71,12 +71,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               },
               child: const Text('Start New Game'),
             ),
-            ElevatedButton(
-              onPressed: () {
 
-              },
-              child: const Text('High Score'),
-            ),
           ],
         ),
       ),
