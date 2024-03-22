@@ -24,6 +24,7 @@ dev_dependencies:
   flutter_lints: ^2.0.0
   get: ^4.6.6
   dio: ^5.4.1
+  shared_preferences: ^2.2.2
 
 
 flutter:

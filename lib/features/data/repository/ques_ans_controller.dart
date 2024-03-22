@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:quiztest/entites/urls.dart';
-import 'package:quiztest/features/data/data_sources/network_excutor.dart';
+import 'package:quiztest/features/data/data_sources/services/network_excutor.dart';
 import 'package:quiztest/features/data/model/QuestionModel.dart';
 import 'package:quiztest/features/data/repository/network_response.dart';
 import 'package:get/get.dart';
@@ -22,18 +22,13 @@ class QuestionAnswerController extends GetxController {
         if (responseBody != null) {
           final List<dynamic>? questionJsonList = responseBody['questions'];
           if (questionJsonList != null) {
-            // Clear the previous questions
+
             questionList.clear();
 
-            // Parse each question JSON
+
             questionList = questionJsonList
                 .map((json) => QuestionModel.fromJson(json))
                 .toList();
-
-            // Update UI
-            update();
-
-            // Return the list of questions
             return questionList;
           } else {
             print('Questions not found in response body');
@@ -52,5 +47,4 @@ class QuestionAnswerController extends GetxController {
       return [];
     }
   }
-
 }

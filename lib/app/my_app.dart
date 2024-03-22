@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quiztest/features/presentation/pages/main_menu_screen.dart';
 import 'package:get/get.dart';
+import 'package:quiztest/features/presentation/pages/main_menu_screen.dart';
 import 'package:quiztest/features/presentation/pages/question_answer_screen.dart';
 
 class MyApp extends StatelessWidget {
@@ -10,12 +10,16 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
+        brightness: Brightness.light,
       ),
-      initialRoute: '/',
+      darkTheme: ThemeData(
+        primarySwatch: Colors.orange,
+        brightness: Brightness.dark,
+      ),
+      themeMode: ThemeMode.system,
       getPages: [
         GetPage(name: '/', page: () => MainMenuScreen()),
         GetPage(name: '/question_answer', page: () => QuestionAnswerScreen()),
-        
       ],
     );
   }
