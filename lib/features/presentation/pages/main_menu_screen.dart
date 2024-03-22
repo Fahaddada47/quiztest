@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:quiztest/features/data/data_sources/ques_ans_controller.dart';
+import 'package:quiztest/features/data/repository/ques_ans_controller.dart';
 import 'package:quiztest/features/presentation/pages/question_answer_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

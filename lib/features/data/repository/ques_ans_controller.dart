@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:quiztest/entites/urls.dart';
-import 'package:quiztest/features/data/data_sources/network_excutor.dart';
+import 'package:quiztest/features/data/data_sources/services/network_excutor.dart';
 import 'package:quiztest/features/data/model/QuestionModel.dart';
 import 'package:quiztest/features/data/repository/network_response.dart';
 import 'package:get/get.dart';
