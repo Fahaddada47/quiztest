@@ -3,35 +3,64 @@ on:
     branches:
       - main
       - master
+      - final one
   push:
     branches:
       - main
       - master
       - develop
+      - final one
 name: "Build & Release"
 jobs:
   build:
-    name: Build & Release
+    name: Build & Release APK & IPA
     runs-on: macos-latest
     steps:
+      # Checkout the repository
       - uses: actions/checkout@v3
+
+      # Setup Java for Android build
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
           java-version: '22.0.1+8'
+
+      # Setup Flutter
       - uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           architecture: x64
 
+      # Install Flutter dependencies
       - run: flutter pub get
-      - run: flutter build apk --release --split-per-abi
+
+      # Build APK (Android)
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
         continue-on-error: true
+
+      # Display APK Gradle Logs if the build fails
       - name: Display Gradle Logs
         if: failure()
         run: cat build/app/outputs/flutter-apk/*.log
 
-      - name: Push to Releases
+      # Build IPA (iOS)
+      - name: Build IPA
+        env:
+          # Set up your signing environment (certificates, provisioning profile, etc.)
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+          APPLE_DEVELOPER_TEAM_ID: ${{ secrets.APPLE_DEVELOPER_TEAM_ID }}
+          APPLE_DEVELOPER_PASSWORD: ${{ secrets.APPLE_DEVELOPER_PASSWORD }}
+        run: |
+          flutter build ios --release --no-codesign
+          xcodebuild -exportArchive \
+            -archivePath build/ios/archive/MyApp.xcarchive \
+            -exportPath build/ios/ipa \
+            -exportOptionsPlist ios/ExportOptions.plist
+
+      # Upload APK to GitHub Releases
+      - name: Push APK to Releases
         if: success()
         uses: ncipollo/release-action@v1
         with:
@@ -43,3 +72,12 @@ jobs:
           JAVA_HOME_22_ARM64: /Users/runner/hostedtoolcache/Java_Zulu_jdk/22.0.1-8/arm64
           FLUTTER_ROOT: /Users/runner/hostedtoolcache/flutter/stable-3.22.2-x64
           PUB_CACHE: /Users/runner/.pub-cache
+
+      # Upload IPA to GitHub Releases
+      - name: Push IPA to Releases
+        if: success()
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: "build/ios/ipa/*.ipa"
+          tag: v1.0.${{ github.run_number }}
+          token: ${{ secrets.TOKEN }}
