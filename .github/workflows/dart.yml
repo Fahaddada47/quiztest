@@ -3,13 +3,13 @@ on:
     branches:
       - main
       - master
-      - final one
+      - final_one
   push:
     branches:
       - main
       - master
       - develop
-      - final one
+      - final_one
 name: "Build & Release"
 jobs:
   build:
